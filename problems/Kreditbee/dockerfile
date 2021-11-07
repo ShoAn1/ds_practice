@@ -1,0 +1,16 @@
+FROM golang:1.14.0-alpine AS module-init
+WORKDIR /app
+COPY . .
+RUN go mod download 
+#Building Application
+RUN CGO_ENABLED=0 GOOS=linux go build -o application .
+#Running Application
+FROM busybox:stable
+WORKDIR /app
+#Copy the dependent files
+COPY --from=module-init /app/application .
+COPY --from=module-init /app/.env .
+#Run the Binary
+EXPOSE 3306
+EXPOSE 1200
+CMD [ "./application" ]
